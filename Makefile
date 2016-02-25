@@ -10,8 +10,9 @@ include $(src)/conf.mk
 
 patch := $(src)/patch/$(NAME).patch
 out := build
-out.rpm := $(out)/rpm
+out.rpm := $(out)/fedora/$(NAME)
 out.files := $(out.rpm)/files
+deb = $(src)/$(out)/debian/$(NAME).deb
 
 # https://wiki.debian.org/RepositoryFormat
 index.1.root := http://ftp.us.debian.org/debian
@@ -20,12 +21,12 @@ index.2.root := http://ftp.us.debian.org/debian
 index.2.dist := $(index.release)-updates/main
 index.3.root := http://security.debian.org
 index.3.dist := $(index.release)/updates/main
-index.type := binary-i386
 
 curl := curl -Rfl --connect-timeout 10
 
 index.local = $(out)/index.$(1)
 index.url = $(call index.$(1).root)/dists/$(call index.$(1).dist)/$(index.type)/Packages.gz
+indices := $(foreach idx,1 2 3, $(call index.local,$(idx)) )
 
 mkdir = @mkdir -p $(dir $@)
 pkg.data = grep -A100 '^Package: $(2)$$' $(call index.local,$(1)) | sed -e '2,$${/^Package: /,$$d}'
@@ -56,19 +57,19 @@ $(out)/index.%:
 	$(curl) $(call index.url,$*) | gunzip -c > $@
 
 .PHONY: index
-index: $(call index.local,1) $(call index.local,2) $(call index.local,3)
+index: $(indices)
 
 .PHONY: url
-url:
+url: $(indices)
 	@echo $(pkg.url)
 
-$(out)/pkg.deb:
+$(deb): $(indices)
 	$(mkdir)
 	$(curl) $(pkg.url) > $@
 
-$(out.files): $(out)/pkg.deb
+$(out.files): $(deb)
 	$(mkdir)
-	cd $(dir $@) && alien -k -g -r ../$(notdir $<)
+	cd $(dir $@) && alien -k -g -r $<
 	mv $(out.rpm)/$(NAME)-* $@
 
 $(patch):
