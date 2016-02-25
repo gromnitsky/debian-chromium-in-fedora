@@ -10,7 +10,7 @@ repos, fetches it & does the conversion.
 
 ## Requirements
 
-	# dnf install alien dpkg curl
+	# dnf install alien dpkg curl rpm-build
 
 (We don't need any of `apt` utils!)
 
