@@ -8,6 +8,7 @@ pp-%:
 src := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 NAME := chromium
+patch := $(src)/patch/$(NAME).patch
 out := build
 out.rpm := $(out)/rpm
 out.files := $(out.rpm)/files
@@ -19,6 +20,8 @@ index.1.dist := $(index.release)/main
 index.2.root := http://security.debian.org
 index.2.dist := $(index.release)/updates/main
 index.type := binary-i386
+
+curl := curl -Rfl --connect-timeout 10
 
 index.local = $(out)/index.$(1)
 index.url = $(call index.$(1).root)/dists/$(call index.$(1).dist)/$(index.type)/Packages.gz
@@ -42,7 +45,7 @@ ver:
 
 $(out)/index.%:
 	$(mkdir)
-	curl -Rfl --connect-timeout 10 $(call index.url,$*) | gunzip -c > $@
+	$(curl) $(call index.url,$*) | gunzip -c > $@
 
 .PHONY: index
 index: $(call index.local,1) $(call index.local,2)
@@ -53,16 +56,20 @@ url:
 
 $(out)/pkg.deb:
 	$(mkdir)
-	curl $(pkg.url) > $@
+	$(curl) $(pkg.url) > $@
 
 $(out.files): $(out)/pkg.deb
 	$(mkdir)
 	cd $(dir $@) && alien -k -g -r ../$(notdir $<)
 	mv $(out.rpm)/$(NAME)-* $@
 
-$(out.rpm)/.patch: spec.patch $(out.files)
+$(patch):
+
+$(out.rpm)/.patch: $(patch) $(out.files)
 	cp $(out.files)/$(NAME)-*.spec $(out.files)/1.spec
-	cd $(out.files) && patch -p0 < $(src)/$<
+ifneq ($(wildcard $(src)/patch/$(NAME).patch),)
+	cd $(out.files) && patch -p0 < $(patch)
+endif
 	touch $@
 
 $(out.rpm)/.rpm: $(out.rpm)/.patch
