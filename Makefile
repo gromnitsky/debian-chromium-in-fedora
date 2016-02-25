@@ -13,24 +13,39 @@ out.rpm := $(out)/rpm
 out.files := $(out.rpm)/files
 
 # https://wiki.debian.org/RepositoryFormat
-index.root := http://security.debian.org
-index.dist := jessie/updates/main
+index.release := jessie
+index.1.root := http://ftp.us.debian.org/debian
+index.1.dist := $(index.release)/main
+index.2.root := http://security.debian.org
+index.2.dist := $(index.release)/updates/main
 index.type := binary-i386
-index.url := $(index.root)/dists/$(index.dist)/$(index.type)/Packages.gz
-index.local := $(out)/index
 
-mkdir = mkdir -p $(dir $@)
-pkg.data = grep -A100 '^Package: $(1)$$' $(index.local) | sed -e '2,$${/^Package: /,$$d}'
-# example: $(call pkg.info,$(name),Version)
-pkg.info = $(shell $(call pkg.data,$(1)) | grep '^$(2): ' | awk '{print $$2}')
-pkg.url = $(index.root)/$(call pkg.info,$(NAME),Filename)
+index.local = $(out)/index.$(1)
+index.url = $(call index.$(1).root)/dists/$(call index.$(1).dist)/$(index.type)/Packages.gz
 
-$(index.local):
+mkdir = @mkdir -p $(dir $@)
+pkg.data = grep -A100 '^Package: $(2)$$' $(call index.local,$(1)) | sed -e '2,$${/^Package: /,$$d}'
+pkg.info = $(shell $(call pkg.data,$(1),$(2)) | grep '^$(3): ' | awk '{print $$2}')
+pkg._ver = $(call pkg.info,$(1),$(NAME),Version)
+pkg._url = $(call index.$(1).root)/$(call pkg.info,$(1),$(NAME),Filename)
+
+define pkg.url =
+$(shell dpkg --compare-versions '$(call pkg._ver,2)' gt '$(call pkg._ver,1)'; \
+	if [ $$? -eq 0 ]; then echo '$(call pkg._url,2)'; else echo "$(call pkg._url,1)"; fi)
+endef
+
+.PHONY: ver
+ver:
+	@printf "%-20s: %s\n" $(index.1.dist) $(call pkg._ver,1)
+	@printf "%-20s: %s\n" $(index.2.dist) $(call pkg._ver,2)
+	@printf "\n%-20s: %s\n" latest $(pkg.url)
+
+$(out)/index.%:
 	$(mkdir)
-	curl $(index.url) | gunzip -c > $@
+	curl -Rfl --connect-timeout 10 $(call index.url,$*) | gunzip -c > $@
 
 .PHONY: index
-index: $(index.local)
+index: $(call index.local,1) $(call index.local,2)
 
 .PHONY: url
 url:
