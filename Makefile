@@ -25,24 +25,25 @@ index.3.dist := $(index.release)/updates/main
 curl := curl -Rfl --connect-timeout 10
 
 index.local = $(out)/index.$(1)
-index.url = $(call index.$(1).root)/dists/$(call index.$(1).dist)/$(index.type)/Packages.gz
+index.url = $(index.$(1).root)/dists/$(index.$(1).dist)/$(index.type)/Packages.gz
 indices := $(foreach idx,1 2 3, $(call index.local,$(idx)) )
 
 mkdir = @mkdir -p $(dir $@)
 pkg.data = grep -A100 '^Package: $(2)$$' $(call index.local,$(1)) | sed -e '2,$${/^Package: /,$$d}'
-pkg.info = $(shell $(call pkg.data,$(1),$(2)) | grep '^$(3): ' | awk '{print $$2}')
+pkg.info = $(word 2, $(shell $(call pkg.data,$(1),$(2)) | grep '^$(3): '))
 pkg._ver = $(call pkg.info,$(1),$(NAME),Version)
-pkg._url = $(call index.$(1).root)/$(call pkg.info,$(1),$(NAME),Filename)
+pkg._url = $(index.$(1).root)/$(call pkg.info,$(1),$(NAME),Filename)
 
-pkg.latest := 1
+pkg._max := 1
 define pkg.max =
-$(foreach idx, 1 2 3, $(if $(subst bigger,,$(shell \
-	dpkg --compare-versions '$(call pkg._ver,$(idx))' gt '$(call pkg._ver,$(pkg.latest))'; \
-	if [ $$? -eq 0 ] ; then echo bigger; else echo smaller; fi
-)),,$(eval pkg.latest := $$(idx))))
+$(foreach idx, 1 2 3, $(if $(filter 0,$(shell \
+	dpkg --compare-versions \
+		'$(call pkg._ver,$(idx))' gt '$(call pkg._ver,$(pkg._max))'; \
+	echo $$?
+)),$(eval pkg._max := $$(idx))))
 endef
 
-pkg.url = $(pkg.max)$(call pkg._url,$(pkg.latest))
+pkg.url = $(pkg.max)$(call pkg._url,$(pkg._max))
 
 .PHONY: ver
 ver:
@@ -72,6 +73,7 @@ $(out.files): $(deb)
 	cd $(dir $@) && alien -k -g -r $<
 	mv $(out.rpm)/$(NAME)-* $@
 
+# if it doesn't exist it always 'newer' then $(out.rpm)/.patch
 $(patch):
 
 $(out.rpm)/.patch: $(patch) $(out.files)
@@ -79,10 +81,10 @@ $(out.rpm)/.patch: $(patch) $(out.files)
 ifneq ($(wildcard $(src)/patch/$(NAME).patch),)
 	cd $(out.files) && patch -p0 < $(patch)
 endif
-	touch $@
+	@touch $@
 
 $(out.rpm)/.rpm: $(out.rpm)/.patch
-	cd $(out.files) && rpmbuild --noclean --buildroot=`pwd` -bb 1.spec
-	touch $@
+	cd $(out.files) && rpmbuild --quiet --noclean --buildroot=`pwd` -bb 1.spec
+	@touch $@
 
 rpm: $(out.rpm)/.rpm
