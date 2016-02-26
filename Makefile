@@ -47,9 +47,7 @@ pkg.url = $(pkg.max)$(call pkg._url,$(pkg._max))
 
 .PHONY: ver
 ver:
-	@printf "%-32s %-20s %s\n" $(index.1.root) $(index.1.dist) $(call pkg._ver,1)
-	@printf "%-32s %-20s %s\n" $(index.2.root) $(index.2.dist) $(call pkg._ver,2)
-	@printf "%-32s %-20s %s\n" $(index.3.root) $(index.3.dist) $(call pkg._ver,3)
+	@$(foreach idx, 1 2 3, printf "%-32s %-20s %s\n" '$(index.$(idx).root)' '$(index.$(idx).dist)' '$(call pkg._ver,$(idx))'; )
 	@echo
 	@echo latest: $(pkg.url)
 
