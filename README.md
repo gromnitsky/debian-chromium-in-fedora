@@ -1,8 +1,10 @@
-# Use Debian Chromium 32bit in Fedora
+# Use Debian Chromium in Fedora
 
 As there is no 32bit Linux version of Chrome (since March 2016) &
 Fedora doesn't provide 32bit Chromium build, we can download .deb
 package & convert it to rpm-format.
+
+The trick also works for the 64bit version.
 
 This makefile (you're not supposed to understand how it works)
 *automatically detects* the latest pkg version in all official Debian
@@ -20,13 +22,17 @@ Clone the repo, then run:
 
 	$ make
 
+or
+
+	$ make index.type=binary-amd64
+
 If you're only interested in the .deb url, type:
 
 	$ make url
 
 If everything was ok:
 
-	$ sudo rpm -i --nodeps build/fedora/chromium/chromium-48.0.2564.116-1~deb8u1.i686.rpm
+	$ sudo rpm -i build/fedora/chromium/chromium-48.0.2564.116-1~deb8u1.i686.rpm
 
 In Fedora 23 you'll also need:
 

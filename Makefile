@@ -8,7 +8,7 @@ pp-%:
 src := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 include $(src)/conf.mk
 
-patch := $(src)/patch/$(NAME).patch
+patch := $(src)/patch/$(index.type).spec.patch
 out := build
 out.rpm := $(out)/fedora/$(NAME)
 out.files := $(out.rpm)/files
@@ -76,7 +76,7 @@ $(patch):
 
 $(out.rpm)/.patch: $(patch) $(out.files)
 	cp $(out.files)/$(NAME)-*.spec $(out.files)/1.spec
-ifneq ($(wildcard $(src)/patch/$(NAME).patch),)
+ifneq ($(wildcard $(patch)),)
 	cd $(out.files) && patch -p0 < $(patch)
 endif
 	@touch $@
