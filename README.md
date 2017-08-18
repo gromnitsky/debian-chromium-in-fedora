@@ -1,8 +1,8 @@
 # Use Debian Chromium in Fedora
 
-As there is no 32bit Linux version of Chrome (since March 2016) &
-Fedora doesn't provide 32bit Chromium build, we can download .deb
-package & convert it to rpm-format.
+As there is no 32bit Linux version of Chrome (since Mar 2016) & Fedora
+doesn't provide a 32bit Chromium build, we can download .deb package &
+convert it to rpm-format.
 
 The trick also works for the 64bit version.
 
@@ -32,13 +32,7 @@ If you're only interested in the .deb url, type:
 
 If everything was ok:
 
-	$ sudo rpm -i build/fedora/chromium/chromium-48.0.2564.116-1~deb8u1.i686.rpm
-
-In Fedora 23 you'll also need:
-
-	# dnf install libsrtp speech-dispatcher
-	# cd /usr/lib
-	# ln -s libsrtp.so.1.0.0 libsrtp.so.0
+	$ sudo rpm -i --nodeps build/fedora/chromium/chromium-60.0.3112.78-1~deb9u1.x86_64.rpm
 
 ## Configuration
 

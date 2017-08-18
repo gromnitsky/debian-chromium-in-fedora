@@ -1,5 +1,5 @@
 NAME := chromium
-index.release := jessie
+index.release := stretch
 
-# http://ftp.us.debian.org/debian/dists/jessie/main/
+# http://ftp.us.debian.org/debian/dists/stretch/main/
 index.type := binary-i386
