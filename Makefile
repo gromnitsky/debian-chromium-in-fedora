@@ -1,10 +1,6 @@
 .PHONY: rpm
 rpm:
 
-.DELETE_ON_ERROR:
-pp-%:
-	@echo "$(strip $($*))" | tr ' ' \\n
-
 src := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 include $(src)/conf.mk
 
@@ -75,14 +71,14 @@ $(out.files): $(deb)
 $(patch):
 
 $(out.rpm)/.patch: $(patch) $(out.files)
-	cp $(out.files)/$(NAME)-*.spec $(out.files)/1.spec
+	mv $(out.files)/$(NAME)-*.spec $(dir $@)/1.spec
 ifneq ($(wildcard $(patch)),)
-	cd $(out.files) && patch -p0 < $(patch)
+	cd $(dir $@) && patch -p0 < $(patch)
 endif
 	@touch $@
 
 $(out.rpm)/.rpm: $(out.rpm)/.patch
-	cd $(out.files) && rpmbuild --quiet --noclean --buildroot=`pwd` -bb 1.spec
+	cd $(out.files) && rpmbuild --quiet --noclean --buildroot=`pwd` -bb ../1.spec $(rpmbuild)
 	@touch $@
 
 rpm: $(out.rpm)/.rpm

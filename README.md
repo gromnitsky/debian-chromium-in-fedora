@@ -30,6 +30,10 @@ If you're only interested in the .deb url, type:
 
 	$ make url
 
+If you're building a 32bit version on a 64bit machine:
+
+	$ make rpmbuild=--target=i686
+
 If everything was ok:
 
 	$ sudo rpm -i --nodeps build/fedora/chromium/chromium-60.0.3112.78-1~deb9u1.x86_64.rpm
